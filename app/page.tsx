@@ -97,7 +97,7 @@ export default function Home() {
             <h1 className="text-5xl sm:text-6xl font-extrabold leading-tight tracking-tight">
               Sell online workshops
               <br /> with{" "}
-              <span className="bg-blue-700 text-white dark:bg-blue-600 dark:text-white px-2 rounded-md">
+              <span className="bg-blue-700 text-white dark:bg-blue-600 dark:text-white px-2 rounded-md underline decoration-yellow-500 decoration-2 decoration-wavy underline-offset-4">
                 Edushop
               </span>
             </h1>
