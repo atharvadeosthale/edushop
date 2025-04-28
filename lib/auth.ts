@@ -8,6 +8,7 @@ import {
   account,
   verification,
 } from "@/database/schema/auth-schema";
+import { openAPI } from "better-auth/plugins";
 
 export const auth = betterAuth({
   appName: "edushop",
@@ -20,5 +21,5 @@ export const auth = betterAuth({
       verification: verification,
     },
   }),
-  plugins: [nextCookies()],
+  plugins: [nextCookies(), openAPI()],
 });

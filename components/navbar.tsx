@@ -43,12 +43,19 @@ export default function Navbar() {
 
         <div className="flex items-center gap-4">
           <div className="hidden sm:block">
-            <Button variant="outline">Sign in</Button>
+            <Link href="/auth/sign-in">
+              <Button variant="outline">Sign in</Button>
+            </Link>
           </div>
-          <Button className="hidden sm:flex gap-2 items-center">
-            <Github size={18} />
-            GitHub
-          </Button>
+          <Link
+            href="https://github.com/atharvadeosthale/edushop"
+            target="_blank"
+          >
+            <Button className="hidden sm:flex gap-2 items-center">
+              <Github size={18} />
+              GitHub
+            </Button>
+          </Link>
           <Button variant="ghost" size="icon" className="md:hidden">
             <svg
               xmlns="http://www.w3.org/2000/svg"
