@@ -18,18 +18,7 @@ export default function Providers({ children }: { children: ReactNode }) {
       enableSystem
       disableTransitionOnChange
     >
-      <AuthUIProvider
-        authClient={authClient}
-        navigate={router.push}
-        replace={router.replace}
-        onSessionChange={() => {
-          // Clear router cache (protected routes)
-          router.refresh();
-        }}
-        Link={Link}
-      >
-        {children}
-      </AuthUIProvider>
+      {children}
     </ThemeProvider>
   );
 }

@@ -2,6 +2,7 @@ import Link from "next/link";
 import { ThemeToggler } from "./theme-toggler";
 import { Button } from "./ui/button";
 import { BookOpen, Github } from "lucide-react";
+import { UserButton } from "@daveyplate/better-auth-ui";
 
 export default function Navbar() {
   return (
@@ -42,10 +43,11 @@ export default function Navbar() {
         </div>
 
         <div className="flex items-center gap-4">
-          <div className="hidden sm:block">
-            <Link href="/auth/sign-in">
+          <div className="hidden sm:flex items-center">
+            <Link href="/auth">
               <Button variant="outline">Sign in</Button>
             </Link>
+            {/* <UserButton size="full" /> */}
           </div>
           <Link
             href="https://github.com/atharvadeosthale/edushop"

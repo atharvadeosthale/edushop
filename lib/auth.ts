@@ -9,6 +9,7 @@ import {
   verification,
 } from "@/database/schema/auth-schema";
 import { openAPI } from "better-auth/plugins";
+import { env } from "./env";
 
 export const auth = betterAuth({
   appName: "edushop",
@@ -22,4 +23,17 @@ export const auth = betterAuth({
     },
   }),
   plugins: [nextCookies(), openAPI()],
+  socialProviders: {
+    google: {
+      enabled: true,
+      clientId: env.GOOGLE_CLIENT_ID,
+      clientSecret: env.GOOGLE_CLIENT_SECRET,
+    },
+  },
+  session: {
+    cookieCache: {
+      enabled: true,
+      maxAge: 10 * 60, // 10 minutes in seconds
+    },
+  },
 });
