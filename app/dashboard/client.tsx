@@ -11,7 +11,7 @@ import {
   TableHeader,
 } from "@/components/ui/table";
 import { useTRPC } from "@/lib/trpc/client";
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import { Loader2, UserCircleIcon, UserRoundSearch } from "lucide-react";
 
 export default function DashboardClient() {
@@ -24,6 +24,17 @@ export default function DashboardClient() {
 
   const { data: workshops, isLoading: isWorkshopsLoading } = useQuery(
     trpc.getWorkshops.queryOptions()
+  );
+
+  const {
+    mutate: createStripeConnection,
+    isPending: isStripeConnectionLoading,
+  } = useMutation(
+    trpc.createStripeConnection.mutationOptions({
+      onSuccess: (data) => {
+        console.log(data);
+      },
+    })
   );
 
   return (
@@ -68,7 +79,13 @@ export default function DashboardClient() {
             </p>
           </div>
           <div className="mt-5">
-            <Button>Setup payments</Button>
+            <Button onClick={() => createStripeConnection()}>
+              {isStripeConnectionLoading ? (
+                <Loader2 className="w-4 h-4 animate-spin" />
+              ) : (
+                "Setup payments"
+              )}
+            </Button>
           </div>
         </div>
       )}

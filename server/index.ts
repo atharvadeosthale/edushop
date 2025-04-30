@@ -1,5 +1,4 @@
 import { db } from "@/database/connection";
-import { user } from "@/database/schema/auth-schema";
 import { auth } from "@/lib/auth";
 import { and, eq, gt } from "drizzle-orm";
 import { publicProcedure, router } from "@/lib/trpc";
@@ -80,12 +79,9 @@ export const appRouter = router({
 
     if (!stripeConnectionId[0]) {
       const stripeAccount = await stripe.accounts.create({
-        type: "express",
+        type: "standard",
         country: "IN",
         email: userSession.user.email,
-        individual: {
-          full_name_aliases: [userSession.user.name],
-        },
       });
 
       await db.insert(stripeConnectionsTable).values({
@@ -96,8 +92,8 @@ export const appRouter = router({
 
       const link = await stripe.accountLinks.create({
         account: stripeAccount.id,
-        refresh_url: `/dashboard`,
-        return_url: `/dashboard`,
+        refresh_url: `${env.NEXT_PUBLIC_BASE_URL}/dashboard`,
+        return_url: `${env.NEXT_PUBLIC_BASE_URL}/dashboard`,
         type: "account_onboarding",
       });
 
@@ -105,8 +101,8 @@ export const appRouter = router({
     } else {
       const link = await stripe.accountLinks.create({
         account: stripeConnectionId[0].stripeAccountId,
-        refresh_url: `/dashboard`,
-        return_url: `/dashboard`,
+        refresh_url: `${env.NEXT_PUBLIC_BASE_URL}/dashboard`,
+        return_url: `${env.NEXT_PUBLIC_BASE_URL}/dashboard`,
         type: "account_onboarding",
       });
 
