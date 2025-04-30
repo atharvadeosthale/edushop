@@ -3,13 +3,7 @@
 import { Button } from "@/components/ui/button";
 import { useTRPC } from "@/lib/trpc/client";
 import { useQuery } from "@tanstack/react-query";
-import { User } from "better-auth";
 import { UserCircleIcon } from "lucide-react";
-
-type Props = {
-  user: User;
-  stripeConnectedAccountId: string | null;
-};
 
 export default function DashboardClient() {
   const trpc = useTRPC();
@@ -17,7 +11,7 @@ export default function DashboardClient() {
     trpc.getStripeConnection.queryOptions()
   );
 
-  console.log(stripeConnectionId);
+  const { data: user } = useQuery(trpc.getUser.queryOptions());
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-10">
@@ -25,7 +19,7 @@ export default function DashboardClient() {
         <div>
           <h1 className="text-5xl font-bold tracking-tighter text-slate-300">
             Welcome,{" "}
-            {/* <span className="text-blue-500">{user.name?.split(" ")[0]}</span> */}
+            <span className="text-blue-500">{user?.name?.split(" ")[0]}</span>
           </h1>
           <div className="mt-7 text-slate-400 text-xl max-w-3xl tracking-tight">
             This is the creator dashboard. Here you can create and manage
@@ -34,7 +28,7 @@ export default function DashboardClient() {
           </div>
         </div>
         <div>
-          {/* {user.image ? (
+          {user?.image ? (
             <img
               src={user.image}
               alt={user.name ?? ""}
@@ -44,7 +38,7 @@ export default function DashboardClient() {
             <div className="w-52 h-52 rounded-full bg-slate-800 flex items-center justify-center">
               <UserCircleIcon className="w-52 h-52 text-slate-300" />
             </div>
-          )} */}
+          )}
         </div>
       </div>
       {!stripeConnectionId && (

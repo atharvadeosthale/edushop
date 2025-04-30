@@ -1,15 +1,26 @@
-import { authClient } from "@/lib/auth-client";
-import { headers } from "next/headers";
+import { auth } from "@/lib/auth";
 import DashboardClient from "./client";
-import { unauthorized } from "next/navigation";
-import { db } from "@/database/connection";
-import { stripeConnectionsTable } from "@/database/schema/stripe-connection";
-import { eq } from "drizzle-orm";
 import { getQueryClient, trpc } from "@/lib/trpc/server";
+import { dehydrate, HydrationBoundary } from "@tanstack/react-query";
+import { headers } from "next/headers";
+import { unauthorized } from "next/navigation";
 
 export default async function Page() {
-  const queryClient = getQueryClient();
-  void queryClient.prefetchQuery(trpc.getStripeConnection.queryOptions());
+  const user = await auth.api.getSession({
+    headers: await headers(),
+  });
 
-  return <DashboardClient />;
+  if (!user) {
+    unauthorized();
+  }
+
+  const queryClient = getQueryClient();
+  await queryClient.prefetchQuery(trpc.getStripeConnection.queryOptions());
+  await queryClient.prefetchQuery(trpc.getUser.queryOptions());
+
+  return (
+    <HydrationBoundary state={dehydrate(queryClient)}>
+      <DashboardClient />
+    </HydrationBoundary>
+  );
 }
