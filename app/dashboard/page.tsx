@@ -15,8 +15,11 @@ export default async function Page() {
   }
 
   const queryClient = getQueryClient();
-  await queryClient.prefetchQuery(trpc.getStripeConnection.queryOptions());
-  await queryClient.prefetchQuery(trpc.getUser.queryOptions());
+
+  await Promise.all([
+    queryClient.prefetchQuery(trpc.getStripeConnection.queryOptions()),
+    queryClient.prefetchQuery(trpc.getUser.queryOptions()),
+  ]);
 
   return (
     <HydrationBoundary state={dehydrate(queryClient)}>

@@ -1,9 +1,18 @@
 "use client";
 
+import CreateWorkshop from "@/components/dashboard/create-workshop";
 import { Button } from "@/components/ui/button";
+import {
+  TableBody,
+  TableCell,
+  TableHead,
+  TableRow,
+  Table,
+  TableHeader,
+} from "@/components/ui/table";
 import { useTRPC } from "@/lib/trpc/client";
 import { useQuery } from "@tanstack/react-query";
-import { UserCircleIcon } from "lucide-react";
+import { Loader2, UserCircleIcon, UserRoundSearch } from "lucide-react";
 
 export default function DashboardClient() {
   const trpc = useTRPC();
@@ -12,6 +21,10 @@ export default function DashboardClient() {
   );
 
   const { data: user } = useQuery(trpc.getUser.queryOptions());
+
+  const { data: workshops, isLoading: isWorkshopsLoading } = useQuery(
+    trpc.getWorkshops.queryOptions()
+  );
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-10">
@@ -31,7 +44,7 @@ export default function DashboardClient() {
           {user?.image ? (
             <img
               src={user.image}
-              alt={user.name ?? ""}
+              alt={user.name ?? "User profile picture"}
               className="w-52 h-52 rounded-full"
             />
           ) : (
@@ -59,6 +72,82 @@ export default function DashboardClient() {
           </div>
         </div>
       )}
+
+      <div className="mt-10">
+        <div className="flex items-center justify-between">
+          <h2 className="text-slate-300 text-4xl font-bold tracking-tighter">
+            Your workshops
+          </h2>
+          {/* <Button className="text-base">Create workshop</Button> */}
+          <CreateWorkshop />
+        </div>
+
+        {isWorkshopsLoading ? (
+          <div className="mt-10">
+            <div className="rounded-lg border border-gray-800">
+              {/* Header */}
+              <div className="border-b border-gray-800">
+                <div className="grid grid-cols-4 gap-4 p-4">
+                  <div className="h-6 w-20 rounded bg-gray-800 animate-pulse"></div>
+                  <div className="h-6 w-32 rounded bg-gray-800 animate-pulse"></div>
+                  <div className="h-6 w-16 rounded bg-gray-800 animate-pulse"></div>
+                  <div className="h-6 w-24 rounded bg-gray-800 animate-pulse"></div>
+                </div>
+              </div>
+              {/* Body */}
+              {[1, 2, 3].map((i) => (
+                <div
+                  key={i}
+                  className="border-b border-gray-800 last:border-none hover:bg-gray-800/50 transition-colors"
+                >
+                  <div className="grid grid-cols-4 gap-4 p-4">
+                    <div className="h-5 w-40 rounded bg-gray-800/50 animate-pulse"></div>
+                    <div className="h-5 w-96 rounded bg-gray-800/50 animate-pulse"></div>
+                    <div className="h-5 w-24 rounded bg-gray-800/50 animate-pulse"></div>
+                    <div className="h-5 w-32 rounded bg-gray-800/50 animate-pulse"></div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        ) : workshops?.length === 0 ? (
+          <div className="mt-10 border border-gray-800 rounded-lg p-5 flex items-center justify-center py-20">
+            <div className="text-slate-400 text-lg flex flex-col items-center gap-2">
+              <UserRoundSearch className="w-10 h-10" />
+              <p className="text-2xl font-bold">No workshops found</p>
+              <p className="text-slate-400">
+                Create a workshop to start selling your content to your
+                audience.
+              </p>
+            </div>
+          </div>
+        ) : (
+          <div className="mt-10">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Name</TableHead>
+                  <TableHead>Description</TableHead>
+                  <TableHead>Price</TableHead>
+                  <TableHead>Date</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {workshops?.map((workshop) => (
+                  <TableRow key={workshop.id}>
+                    <TableCell>{workshop.name}</TableCell>
+                    <TableCell>{workshop.description}</TableCell>
+                    <TableCell>${(workshop.price / 100).toFixed(2)}</TableCell>
+                    <TableCell>
+                      {new Date(workshop.time * 1000).toLocaleDateString()}
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
+        )}
+      </div>
     </div>
   );
 }
