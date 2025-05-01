@@ -8,6 +8,7 @@ import { stripeConnectionsTable } from "@/database/schema/stripe-connection";
 import { workshopsTable } from "@/database/schema/workshop";
 import { stripe } from "@/lib/stripe";
 import { env } from "@/lib/env";
+import { z } from "zod";
 
 export const appRouter = router({
   getUser: publicProcedure.query(async ({}) => {
@@ -93,7 +94,7 @@ export const appRouter = router({
       const link = await stripe.accountLinks.create({
         account: stripeAccount.id,
         refresh_url: `${env.NEXT_PUBLIC_BASE_URL}/dashboard`,
-        return_url: `${env.NEXT_PUBLIC_BASE_URL}/dashboard`,
+        return_url: `${env.NEXT_PUBLIC_BASE_URL}/dashboard?stripeConnectRedirect=true`,
         type: "account_onboarding",
       });
 
@@ -102,7 +103,7 @@ export const appRouter = router({
       const link = await stripe.accountLinks.create({
         account: stripeConnectionId[0].stripeAccountId,
         refresh_url: `${env.NEXT_PUBLIC_BASE_URL}/dashboard`,
-        return_url: `${env.NEXT_PUBLIC_BASE_URL}/dashboard`,
+        return_url: `${env.NEXT_PUBLIC_BASE_URL}/dashboard?stripeConnectRedirect=true`,
         type: "account_onboarding",
       });
 
@@ -135,6 +136,63 @@ export const appRouter = router({
 
     return workshops;
   }),
+
+  createWorkshop: publicProcedure
+    .input(
+      z.object({
+        name: z.string(),
+        description: z.string(),
+        price: z.number(),
+        time: z.number(),
+      })
+    )
+    .mutation(async ({ input }) => {
+      const { name, description, price, time } = input;
+
+      const userSession = await auth.api.getSession({
+        headers: await headers(),
+      });
+
+      if (!userSession)
+        throw new TRPCError({
+          code: "UNAUTHORIZED",
+          message: "You need to be signed in to access this endpoint.",
+        });
+
+      // Check if Stripe connection exists
+      const stripeConnectionId = await db
+        .select()
+        .from(stripeConnectionsTable)
+        .where(
+          and(
+            eq(stripeConnectionsTable.userId, userSession.user.id),
+            eq(stripeConnectionsTable.onboardingCompleted, true)
+          )
+        );
+
+      if (!stripeConnectionId[0]) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message:
+            "You need to connect your Stripe account to create a workshop.",
+        });
+      }
+
+      // console.log(name, description, price, time);
+
+      await db.insert(workshopsTable).values({
+        name: name,
+        description: description,
+        price: price,
+        time: time,
+        createdBy: userSession.user.id,
+      });
+
+      return {
+        success: true,
+        message: "Workshop created successfully",
+      };
+    }),
 });
 
 export type AppRouter = typeof appRouter;

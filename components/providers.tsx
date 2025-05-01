@@ -3,6 +3,7 @@
 import { ThemeProvider } from "@/components/theme-provider";
 import { ReactNode } from "react";
 import { TRPCReactProvider } from "@/lib/trpc/client";
+import { Toaster } from "@/components/ui/sonner";
 
 export default function Providers({ children }: { children: ReactNode }) {
   return (
@@ -14,6 +15,7 @@ export default function Providers({ children }: { children: ReactNode }) {
         disableTransitionOnChange
       >
         {children}
+        <Toaster />
       </ThemeProvider>
     </TRPCReactProvider>
   );

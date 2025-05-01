@@ -8,7 +8,6 @@ export const workshopsTable = sqliteTable("workshops", {
   description: text("description").notNull(),
   price: integer("price").notNull(),
   time: integer("time").notNull(),
-  slug: text("slug").notNull(),
   createdBy: text("created_by")
     .notNull()
     .references(() => user.id),
