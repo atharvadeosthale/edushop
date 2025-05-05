@@ -1,6 +1,4 @@
-import { AppRouter } from "@/server";
 import { initTRPC } from "@trpc/server";
-import { createTRPCContext } from "@trpc/tanstack-react-query";
 
 const t = initTRPC.create();
 

@@ -32,7 +32,7 @@ export default function DashboardClient() {
   } = useMutation(
     trpc.createStripeConnection.mutationOptions({
       onSuccess: (data) => {
-        console.log(data);
+        window.location.href = data;
       },
     })
   );

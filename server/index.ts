@@ -80,8 +80,8 @@ export const appRouter = router({
 
     if (!stripeConnectionId[0]) {
       const stripeAccount = await stripe.accounts.create({
-        type: "standard",
-        country: "IN",
+        type: "express",
+        // country: "IN",
         email: userSession.user.email,
       });
 
@@ -140,10 +140,10 @@ export const appRouter = router({
   createWorkshop: publicProcedure
     .input(
       z.object({
-        name: z.string(),
-        description: z.string(),
-        price: z.number(),
-        time: z.number(),
+        name: z.string().min(1, "Name is required"),
+        description: z.string().min(1, "Description is required"),
+        price: z.number().min(1, "Price is required"),
+        time: z.number().min(1, "Time is required"),
       })
     )
     .mutation(async ({ input }) => {
@@ -193,6 +193,45 @@ export const appRouter = router({
         message: "Workshop created successfully",
       };
     }),
+
+  getStripeUpdateLink: publicProcedure.query(async ({}) => {
+    const userSession = await auth.api.getSession({
+      headers: await headers(),
+    });
+
+    if (!userSession)
+      throw new TRPCError({
+        code: "UNAUTHORIZED",
+        message: "You need to be signed in to access this endpoint.",
+      });
+
+    const stripeConnectionId = await db
+      .select()
+      .from(stripeConnectionsTable)
+      .where(
+        and(
+          eq(stripeConnectionsTable.userId, userSession.user.id),
+          eq(stripeConnectionsTable.onboardingCompleted, true)
+        )
+      );
+
+    if (!stripeConnectionId[0]) {
+      throw new TRPCError({
+        code: "BAD_REQUEST",
+        message:
+          "Please complete Stripe onboarding before updating your account.",
+      });
+    }
+
+    const link = await stripe.accountLinks.create({
+      account: stripeConnectionId[0].stripeAccountId,
+      type: "account_update",
+      refresh_url: `${env.NEXT_PUBLIC_BASE_URL}/dashboard`,
+      return_url: `${env.NEXT_PUBLIC_BASE_URL}/dashboard`,
+    });
+
+    return link.url;
+  }),
 });
 
 export type AppRouter = typeof appRouter;
