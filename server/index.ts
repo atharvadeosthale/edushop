@@ -143,7 +143,9 @@ export const appRouter = router({
         name: z.string().min(1, "Name is required"),
         description: z.string().min(1, "Description is required"),
         price: z.number().min(1, "Price is required"),
-        time: z.number().min(1, "Time is required"),
+        // TODO: this feels a flaky way, check later if this causes
+        // some stupid funny issues like before
+        time: z.number().min(Math.floor(Date.now() / 1000), "Time is required"),
       })
     )
     .mutation(async ({ input }) => {
