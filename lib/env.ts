@@ -10,6 +10,10 @@ const envSchema = z.object({
 
   // Payments
   STRIPE_SECRET_KEY: z.string().min(1, "STRIPE_SECRET_KEY is required"),
+  STRIPE_WEBHOOK_SECRET: z.string().min(1, "STRIPE_WEBHOOK_SECRET is required"),
+  STRIPE_CONNECT_WEBHOOK_SECRET: z
+    .string()
+    .min(1, "STRIPE_CONNECT_WEBHOOK_SECRET is required"),
 
   // Google API keys
   GOOGLE_CLIENT_ID: z.string().min(1, "GOOGLE_CLIENT_ID is required"),

@@ -9,6 +9,7 @@ import { workshopsTable } from "@/database/schema/workshop";
 import { stripe } from "@/lib/stripe";
 import { env } from "@/lib/env";
 import { z } from "zod";
+import { user } from "@/database/schema/auth-schema";
 
 export const appRouter = router({
   getUser: publicProcedure.query(async ({}) => {
@@ -151,6 +152,8 @@ export const appRouter = router({
     .mutation(async ({ input }) => {
       const { name, description, price, time } = input;
 
+      const updatedPrice = price * 100;
+
       const userSession = await auth.api.getSession({
         headers: await headers(),
       });
@@ -185,7 +188,7 @@ export const appRouter = router({
       await db.insert(workshopsTable).values({
         name: name,
         description: description,
-        price: price,
+        price: updatedPrice,
         time: time,
         createdBy: userSession.user.id,
       });
@@ -234,6 +237,56 @@ export const appRouter = router({
 
     return link.url;
   }),
+
+  // Shop section
+  getShopDetails: publicProcedure
+    .input(
+      z.object({
+        id: z.string(),
+      })
+    )
+    .query(async ({ input }) => {
+      const { id } = input;
+
+      const userDetails = await db.select().from(user).where(eq(user.id, id));
+
+      const owner = {
+        name: userDetails[0].name,
+        image: userDetails[0].image,
+        email: userDetails[0].email,
+      };
+
+      if (userDetails.length < 1) {
+        return new TRPCError({
+          code: "NOT_FOUND",
+          message: "Shop not found!",
+        });
+      }
+
+      return owner;
+    }),
+
+  getWorkshopsById: publicProcedure
+    .input(
+      z.object({
+        id: z.string(),
+      })
+    )
+    .query(async ({ input }) => {
+      const { id } = input;
+
+      const workshops = await db
+        .select()
+        .from(workshopsTable)
+        .where(
+          and(
+            eq(workshopsTable.createdBy, id),
+            gt(workshopsTable.time, Math.floor(Date.now() / 1000))
+          )
+        );
+
+      return workshops;
+    }),
 });
 
 export type AppRouter = typeof appRouter;
