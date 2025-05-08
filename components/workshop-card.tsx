@@ -1,4 +1,8 @@
-import React from "react";
+"use client";
+
+import { useTRPC } from "@/lib/trpc/client";
+import { useMutation } from "@tanstack/react-query";
+import { toast } from "sonner";
 
 type WorkshopCardProps = {
   id: number;
@@ -15,6 +19,21 @@ export default function WorkshopCard({
   time,
   price,
 }: WorkshopCardProps) {
+  const trpc = useTRPC();
+
+  const { mutate: purchaseWorkshop } = useMutation(
+    trpc.purchaseWorkshop.mutationOptions({
+      onSuccess: (url) => {
+        if (url) {
+          window.location.href = url;
+        } else toast.error("Failed to purchase workshop");
+      },
+      onError: () => {
+        toast.error("Failed to purchase workshop");
+      },
+    })
+  );
+
   return (
     <div className="group relative">
       <div className="absolute -inset-1 bg-gradient-to-r from-white/[0.07] to-white/[0.03] rounded-xl blur opacity-0 group-hover:opacity-100 transition duration-500 group-hover:duration-200"></div>
@@ -78,8 +97,11 @@ export default function WorkshopCard({
             {description}
           </p>
 
-          <button className="mt-6 py-2 px-4 bg-white/5 hover:bg-white/10 border border-white/10 rounded-lg text-sm font-medium transition-all duration-200 hover:border-white/20">
-            View Details
+          <button
+            className="mt-6 py-2 px-4 bg-white/5 hover:bg-white/10 border border-white/10 rounded-lg text-sm font-medium transition-all duration-200 hover:border-white/20"
+            onClick={() => purchaseWorkshop({ id })}
+          >
+            Purchase
           </button>
         </div>
       </div>

@@ -1,6 +1,6 @@
 import { integer, sqliteTable, text } from "drizzle-orm/sqlite-core";
 import { user } from "./auth-schema";
-
+import { sql } from "drizzle-orm";
 export const stripeConnectionsTable = sqliteTable("stripe_connections", {
   id: integer("id").primaryKey().notNull(),
   userId: text("user_id")

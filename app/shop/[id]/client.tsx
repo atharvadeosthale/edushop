@@ -108,7 +108,7 @@ export function ShopClientPage({ id }: { id: string }) {
                 <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8">
                   {[...Array(3)].map((_, index) => (
                     <div
-                      key={index}
+                      key={`skeleton-${index}`}
                       className="relative h-full p-6 bg-white/[0.02] border border-white/10 rounded-xl"
                     >
                       <div className="animate-pulse">

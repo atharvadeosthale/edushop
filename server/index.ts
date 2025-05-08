@@ -10,6 +10,7 @@ import { stripe } from "@/lib/stripe";
 import { env } from "@/lib/env";
 import { z } from "zod";
 import { user } from "@/database/schema/auth-schema";
+import { purchasesTable } from "@/database/schema/purchase";
 
 export const appRouter = router({
   getUser: publicProcedure.query(async ({}) => {
@@ -84,6 +85,10 @@ export const appRouter = router({
         type: "express",
         // country: "IN",
         email: userSession.user.email,
+        capabilities: {
+          transfers: { requested: true },
+          card_payments: { requested: true },
+        },
       });
 
       await db.insert(stripeConnectionsTable).values({
@@ -286,6 +291,123 @@ export const appRouter = router({
         );
 
       return workshops;
+    }),
+
+  purchaseWorkshop: publicProcedure
+    .input(
+      z.object({
+        id: z.number(),
+      })
+    )
+    .mutation(async ({ input }) => {
+      const { id } = input;
+
+      const userSession = await auth.api.getSession({
+        headers: await headers(),
+      });
+
+      if (!userSession)
+        throw new TRPCError({
+          code: "UNAUTHORIZED",
+          message: "You need to be signed in to access this endpoint.",
+        });
+      // Get shop details & check if it exists
+      const workshopDetails = await db
+        .select()
+        .from(workshopsTable)
+        // .leftJoin(user, eq(workshopsTable.createdBy, user.id))
+        .where(eq(workshopsTable.id, id));
+
+      if (workshopDetails.length < 1) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Shop not found!",
+        });
+      }
+
+      if (workshopDetails.length < 1) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Shop not found!",
+        });
+      }
+
+      const workshop = workshopDetails[0];
+
+      // Check if shop's stripe connection is valid
+      const stripeConnectionId = await db
+        .select()
+        .from(stripeConnectionsTable)
+        .where(eq(stripeConnectionsTable.userId, workshop.createdBy));
+
+      if (!stripeConnectionId[0]) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "Shop's Stripe account is not connected.",
+        });
+      }
+
+      if (!stripeConnectionId[0].onboardingCompleted) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "Shop's Stripe account is not onboarded.",
+        });
+      }
+      // Check if workshop is already purchased
+      const purchase = await db
+        .select()
+        .from(purchasesTable)
+        .where(
+          and(
+            eq(purchasesTable.userId, userSession.user.id),
+            eq(purchasesTable.workshopId, id),
+            eq(purchasesTable.purchaseSuccessful, true)
+          )
+        );
+
+      if (purchase.length > 0) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "You have already purchased this workshop.",
+        });
+      }
+
+      // Create a dynamic checkout session
+      const session = await stripe.checkout.sessions.create(
+        {
+          line_items: [
+            {
+              price_data: {
+                currency: "usd",
+                product_data: {
+                  name: workshop.name,
+                },
+                unit_amount: workshop.price,
+              },
+              quantity: 1,
+            },
+          ],
+          mode: "payment",
+          success_url: `${env.NEXT_PUBLIC_BASE_URL}/shop/${workshop.createdBy}?purchaseSuccess=true`,
+          cancel_url: `${env.NEXT_PUBLIC_BASE_URL}/shop/${workshop.createdBy}?purchaseFailed=true`,
+          customer_email: userSession.user.email,
+          payment_intent_data: {
+            application_fee_amount: workshop.price * 0.2,
+          },
+        },
+        {
+          stripeAccount: stripeConnectionId[0].stripeAccountId,
+        }
+      );
+
+      // Entry in DB, later to be flagged true
+      await db.insert(purchasesTable).values({
+        userId: userSession.user.id,
+        workshopId: id,
+        stripeCheckoutId: session.id,
+      });
+
+      return session.url;
     }),
 });
 
