@@ -257,7 +257,7 @@ export const appRouter = router({
       };
 
       if (userDetails.length < 1) {
-        return new TRPCError({
+        throw new TRPCError({
           code: "NOT_FOUND",
           message: "Shop not found!",
         });

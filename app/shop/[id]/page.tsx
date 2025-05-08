@@ -1,3 +1,8 @@
+import { getQueryClient, trpc } from "@/lib/trpc/server";
+import { ShopClientPage } from "./client";
+import { dehydrate } from "@tanstack/react-query";
+import { HydrationBoundary } from "@tanstack/react-query";
+
 export default async function Page({
   params,
 }: {
@@ -5,5 +10,13 @@ export default async function Page({
 }) {
   const { id } = await params;
 
-  return <div>page</div>;
+  const queryClient = getQueryClient();
+
+  await queryClient.prefetchQuery(trpc.getShopDetails.queryOptions({ id }));
+
+  return (
+    <HydrationBoundary state={dehydrate(queryClient)}>
+      <ShopClientPage id={id} />
+    </HydrationBoundary>
+  );
 }
