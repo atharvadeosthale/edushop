@@ -5,6 +5,7 @@ import { env } from "@/lib/env";
 import { db } from "@/database/connection";
 import { stripeConnectionsTable } from "@/database/schema/stripe-connection";
 import { eq } from "drizzle-orm";
+import { purchasesTable } from "@/database/schema/purchase";
 
 const webhookSecret = env.STRIPE_CONNECT_WEBHOOK_SECRET;
 
@@ -24,12 +25,32 @@ export async function POST(request: NextRequest) {
     );
   }
 
+  console.log("Stripe account:", event.account);
+
   // Handle the event
   switch (event.type) {
     case "checkout.session.completed":
       const session = event.data.object as Stripe.Checkout.Session;
-      // Then define and call a function to handle the event checkout.session.completed
+
       console.log("Checkout session completed:", session);
+
+      const checkoutSession = await stripe.checkout.sessions.retrieve(
+        session.id,
+        { stripeAccount: event.account }
+      );
+
+      console.log("Checkout session:", checkoutSession);
+
+      if (checkoutSession.status === "complete") {
+        // Purchase successful, update the DB
+        await db
+          .update(purchasesTable)
+          .set({
+            purchaseSuccessful: true,
+          })
+          .where(eq(purchasesTable.stripeCheckoutId, checkoutSession.id));
+      }
+
       break;
     case "capability.updated":
       console.log("Capability updated:", event.data.object);
@@ -40,7 +61,10 @@ export async function POST(request: NextRequest) {
 
       // TODO: make this efficient later, for now just update capabilites as
       // you receive them from Stripe
-      if (account.capabilities?.transfers) {
+      if (
+        account.capabilities?.transfers === "active" &&
+        account.capabilities?.card_payments === "active"
+      ) {
         await db
           .update(stripeConnectionsTable)
           .set({
