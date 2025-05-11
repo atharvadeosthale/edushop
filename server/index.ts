@@ -409,6 +409,26 @@ export const appRouter = router({
 
       return session.url;
     }),
+
+  getWorkshopById: publicProcedure
+    .input(z.object({ id: z.number() }))
+    .query(async ({ input }) => {
+      const { id } = input;
+
+      const workshop = await db
+        .select()
+        .from(workshopsTable)
+        .where(eq(workshopsTable.id, id));
+
+      if (workshop.length < 1) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Workshop not found!",
+        });
+      }
+
+      return workshop[0];
+    }),
 });
 
 export type AppRouter = typeof appRouter;

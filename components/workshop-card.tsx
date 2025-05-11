@@ -21,15 +21,15 @@ export default function WorkshopCard({
 }: WorkshopCardProps) {
   const trpc = useTRPC();
 
-  const { mutate: purchaseWorkshop } = useMutation(
+  const { mutate: purchaseWorkshop, isPending: isPurchasing } = useMutation(
     trpc.purchaseWorkshop.mutationOptions({
       onSuccess: (url) => {
         if (url) {
           window.location.href = url;
         } else toast.error("Failed to purchase workshop");
       },
-      onError: () => {
-        toast.error("Failed to purchase workshop");
+      onError: (error) => {
+        toast.error(error.message);
       },
     })
   );
@@ -98,8 +98,9 @@ export default function WorkshopCard({
           </p>
 
           <button
-            className="mt-6 py-2 px-4 bg-white/5 hover:bg-white/10 border border-white/10 rounded-lg text-sm font-medium transition-all duration-200 hover:border-white/20"
+            className="mt-6 py-2 px-4 bg-white/5 hover:bg-white/10 border border-white/10 rounded-lg text-sm font-medium transition-all duration-200 hover:border-white/20 disabled:opacity-50 disabled:cursor-not-allowed"
             onClick={() => purchaseWorkshop({ id })}
+            disabled={isPurchasing}
           >
             Purchase
           </button>
