@@ -1,7 +1,10 @@
 import { auth } from "@/lib/auth";
-import { getQueryClient } from "@/lib/trpc/server";
+import { caller, getQueryClient, trpc } from "@/lib/trpc/server";
+import { dehydrate, HydrationBoundary } from "@tanstack/react-query";
 import { headers } from "next/headers";
-import { unauthorized } from "next/navigation";
+import { notFound, unauthorized } from "next/navigation";
+import WorkshopClientPage from "./client";
+import { TRPCError } from "@trpc/server";
 
 export default async function Page({
   params,
@@ -19,5 +22,19 @@ export default async function Page({
 
   const queryClient = getQueryClient();
 
-  return <div>Page</div>;
+  let workshop;
+
+  try {
+    workshop = await caller.getWorkshopById({ id: parseInt(id) });
+  } catch (err) {
+    if (err instanceof TRPCError && err.code === "NOT_FOUND") {
+      notFound();
+    }
+  }
+
+  return (
+    <HydrationBoundary state={dehydrate(queryClient)}>
+      <WorkshopClientPage />
+    </HydrationBoundary>
+  );
 }

@@ -124,7 +124,7 @@ export default function DashboardClient() {
 
             <div className="relative">
               <div className="flex items-center justify-between mb-8">
-                <h2 className="text-3xl font-medium">Your Workshops</h2>
+                <h2 className="text-3xl font-medium">Your workshops</h2>
                 <div className="h-px flex-grow ml-8 bg-gradient-to-r from-white/10 to-transparent"></div>
                 <CreateWorkshop />
               </div>

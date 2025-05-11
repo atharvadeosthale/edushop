@@ -99,7 +99,7 @@ export function ShopClientPage({ id }: { id: string }) {
             <div className="relative">
               <div className="flex items-center justify-between mb-12">
                 <h2 className="text-2xl md:text-3xl font-medium">
-                  Our Workshops
+                  Our workshops
                 </h2>
                 <div className="h-px flex-grow ml-8 bg-gradient-to-r from-white/10 to-transparent"></div>
               </div>
