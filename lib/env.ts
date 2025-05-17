@@ -18,6 +18,12 @@ const envSchema = z.object({
   // Google API keys
   GOOGLE_CLIENT_ID: z.string().min(1, "GOOGLE_CLIENT_ID is required"),
   GOOGLE_CLIENT_SECRET: z.string().min(1, "GOOGLE_CLIENT_SECRET is required"),
+
+  // Stream
+  NEXT_PUBLIC_STREAM_API_KEY: z
+    .string()
+    .min(1, "NEXT_PUBLIC_STREAM_API_KEY is required"),
+  STREAM_SECRET_KEY: z.string().min(1, "STREAM_SECRET_KEY is required"),
 });
 
 export const env = envSchema.parse(process.env);
