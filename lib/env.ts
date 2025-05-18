@@ -24,6 +24,10 @@ const envSchema = z.object({
     .string()
     .min(1, "NEXT_PUBLIC_STREAM_API_KEY is required"),
   STREAM_SECRET_KEY: z.string().min(1, "STREAM_SECRET_KEY is required"),
+
+  // Redis
+  UPSTASH_REDIS_URL: z.string().min(1, "UPSTASH_REDIS_URL is required"),
+  UPSTASH_REDIS_TOKEN: z.string().min(1, "UPSTASH_REDIS_TOKEN is required"),
 });
 
 export const env = envSchema.parse(process.env);
