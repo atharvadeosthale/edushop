@@ -11,6 +11,7 @@ import { env } from "@/lib/env";
 import { z } from "zod";
 import { user } from "@/database/schema/auth-schema";
 import { purchasesTable } from "@/database/schema/purchase";
+import { caller } from "@/lib/trpc/server";
 
 export const appRouter = router({
   getUser: publicProcedure.query(async ({}) => {
@@ -190,12 +191,40 @@ export const appRouter = router({
 
       // console.log(name, description, price, time);
 
+      // Create stripe product
+      const stripeProduct = await stripe.products.create(
+        {
+          name: name,
+          description: description,
+          metadata: {
+            type: "workshop",
+            time: time,
+          },
+        },
+        {
+          stripeAccount: stripeConnectionId[0].stripeAccountId,
+        }
+      );
+
+      // Create stripe price
+      await stripe.prices.create(
+        {
+          product: stripeProduct.id,
+          unit_amount: updatedPrice,
+          currency: "usd",
+        },
+        {
+          stripeAccount: stripeConnectionId[0].stripeAccountId,
+        }
+      );
+
       await db.insert(workshopsTable).values({
         name: name,
         description: description,
         price: updatedPrice,
         time: time,
         createdBy: userSession.user.id,
+        stripeProductId: stripeProduct.id,
       });
 
       return {
@@ -204,7 +233,7 @@ export const appRouter = router({
       };
     }),
 
-  getStripeUpdateLink: publicProcedure.query(async ({}) => {
+  getStripeLoginLink: publicProcedure.mutation(async ({}) => {
     const userSession = await auth.api.getSession({
       headers: await headers(),
     });
@@ -233,12 +262,9 @@ export const appRouter = router({
       });
     }
 
-    const link = await stripe.accountLinks.create({
-      account: stripeConnectionId[0].stripeAccountId,
-      type: "account_update",
-      refresh_url: `${env.NEXT_PUBLIC_BASE_URL}/dashboard`,
-      return_url: `${env.NEXT_PUBLIC_BASE_URL}/dashboard`,
-    });
+    const link = await stripe.accounts.createLoginLink(
+      stripeConnectionId[0].stripeAccountId
+    );
 
     return link.url;
   }),
@@ -372,23 +398,26 @@ export const appRouter = router({
         });
       }
 
-      // Create a dynamic checkout session
+      // Get price id
+      const price = await stripe.prices.list(
+        {
+          product: workshop.stripeProductId,
+        },
+        {
+          stripeAccount: stripeConnectionId[0].stripeAccountId,
+        }
+      );
+
       const session = await stripe.checkout.sessions.create(
         {
           line_items: [
             {
-              price_data: {
-                currency: "usd",
-                product_data: {
-                  name: workshop.name,
-                },
-                unit_amount: workshop.price,
-              },
+              price: price.data[0].id,
               quantity: 1,
             },
           ],
           mode: "payment",
-          success_url: `${env.NEXT_PUBLIC_BASE_URL}/shop/${workshop.createdBy}?purchaseSuccess=true`,
+          success_url: `${env.NEXT_PUBLIC_BASE_URL}/shop/${workshop.createdBy}/success?checkout_session_id={CHECKOUT_SESSION_ID}`,
           cancel_url: `${env.NEXT_PUBLIC_BASE_URL}/shop/${workshop.createdBy}?purchaseFailed=true`,
           customer_email: userSession.user.email,
           payment_intent_data: {
@@ -428,6 +457,49 @@ export const appRouter = router({
       }
 
       return workshop[0];
+    }),
+
+  checkWorkshopAuthorisation: publicProcedure
+    .input(z.object({ workshopId: z.number() }))
+    .query(async ({ input }) => {
+      const { workshopId } = input;
+
+      const userSession = await auth.api.getSession({
+        headers: await headers(),
+      });
+
+      if (!userSession)
+        throw new TRPCError({
+          code: "UNAUTHORIZED",
+          message: "You need to be signed in to access this endpoint.",
+        });
+
+      const workshop = await db
+        .select()
+        .from(workshopsTable)
+        .where(eq(workshopsTable.id, workshopId));
+
+      if (!workshop[0]) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Workshop not found!",
+        });
+      }
+
+      if (workshop[0].createdBy === userSession.user.id) return true;
+
+      const authorisedUser = await db
+        .select()
+        .from(purchasesTable)
+        .where(
+          and(
+            eq(purchasesTable.userId, userSession.user.id),
+            eq(purchasesTable.workshopId, workshopId),
+            eq(purchasesTable.purchaseSuccessful, true)
+          )
+        );
+
+      return authorisedUser.length > 0;
     }),
 });
 

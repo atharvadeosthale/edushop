@@ -13,6 +13,7 @@ import {
 import { useTRPC } from "@/lib/trpc/client";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { Loader2, UserCircleIcon, UserRoundSearch } from "lucide-react";
+import { CopyButton } from "@/components/ui/copy-button";
 
 export default function DashboardClient() {
   const trpc = useTRPC();
@@ -22,15 +23,25 @@ export default function DashboardClient() {
 
   const { data: user } = useQuery(trpc.getUser.queryOptions());
 
-  const { data: workshops, isLoading: isWorkshopsLoading } = useQuery(
-    trpc.getWorkshops.queryOptions()
-  );
+  const {
+    data: workshops,
+    isLoading: isWorkshopsLoading,
+    refetch: refetchWorkshops,
+  } = useQuery(trpc.getWorkshops.queryOptions());
 
   const {
     mutate: createStripeConnection,
     isPending: isStripeConnectionLoading,
   } = useMutation(
     trpc.createStripeConnection.mutationOptions({
+      onSuccess: (data) => {
+        window.location.href = data;
+      },
+    })
+  );
+
+  const { mutate: getStripeUpdateLink } = useMutation(
+    trpc.getStripeLoginLink.mutationOptions({
       onSuccess: (data) => {
         window.location.href = data;
       },
@@ -69,6 +80,24 @@ export default function DashboardClient() {
               <div className="text-lg text-white/60 max-w-3xl">
                 This is your creator dashboard. Here you can create and manage
                 workshops, view purchases, and track your creator journey.
+              </div>
+              <div className="flex items-center gap-3 mt-5">
+                <Button
+                  className="text-white border-white/20 bg-white/5 hover:bg-white/10 hover:border-white/30"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => getStripeUpdateLink()}
+                >
+                  Manage Payments
+                </Button>
+
+                <CopyButton
+                  value={`${
+                    typeof window !== "undefined" ? window.location.origin : ""
+                  }/shop/${user?.id}`}
+                  label="Copy Shop Link"
+                  successMessage="Shop link copied!"
+                />
               </div>
             </div>
             <div className="relative">
@@ -126,7 +155,7 @@ export default function DashboardClient() {
               <div className="flex items-center justify-between mb-8">
                 <h2 className="text-3xl font-medium">Your workshops</h2>
                 <div className="h-px flex-grow ml-8 bg-gradient-to-r from-white/10 to-transparent"></div>
-                <CreateWorkshop />
+                <CreateWorkshop refetch={refetchWorkshops} />
               </div>
 
               {isWorkshopsLoading ? (

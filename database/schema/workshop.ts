@@ -14,6 +14,7 @@ export const workshopsTable = sqliteTable("workshops", {
   createdAt: integer("created_at", { mode: "timestamp" })
     .notNull()
     .default(sql`CURRENT_TIMESTAMP`),
+  stripeProductId: text("stripe_product_id").notNull(),
 });
 
 export type Workshop = typeof workshopsTable.$inferSelect;
