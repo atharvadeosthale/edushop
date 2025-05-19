@@ -1,10 +1,29 @@
+"use client";
+
 import Link from "next/link";
 import { ThemeToggler } from "./theme-toggler";
 import { Button } from "./ui/button";
-import { BookOpen, Github } from "lucide-react";
-import { UserButton } from "@daveyplate/better-auth-ui";
+import { BookOpen, Github, UserIcon } from "lucide-react";
+import { useTRPC } from "@/lib/trpc/client";
+import { useQuery } from "@tanstack/react-query";
+import { authClient } from "@/lib/auth-client";
+import { useRouter } from "next/navigation";
 
 export default function Navbar() {
+  const router = useRouter();
+  const trpc = useTRPC();
+
+  const queryOptions = trpc.getUser.queryOptions();
+
+  queryOptions.retry = false;
+
+  const { data: user, isLoading: isUserLoading } = useQuery(queryOptions);
+
+  const handleSignOut = async () => {
+    await authClient.signOut();
+    router.refresh();
+  };
+
   return (
     <div className="border-b bg-background/95 backdrop-blur-sm sticky top-0 z-50">
       <div className="max-w-7xl mx-auto flex justify-between items-center py-4 px-4 sm:px-6 lg:px-8">
@@ -44,9 +63,24 @@ export default function Navbar() {
 
         <div className="flex items-center gap-4">
           <div className="hidden sm:flex items-center">
-            <Link href="/auth">
-              <Button variant="outline">Sign in</Button>
-            </Link>
+            {isUserLoading ? (
+              <div className="w-10 h-10 rounded-full bg-gray-800 animate-pulse" />
+            ) : user ? (
+              user.image ? (
+                <img
+                  src={user.image}
+                  alt="User"
+                  className="w-10 h-10 rounded-full"
+                  onClick={handleSignOut}
+                />
+              ) : (
+                <UserIcon className="w-10 h-10" onClick={handleSignOut} />
+              )
+            ) : (
+              <Link href="/auth">
+                <Button variant="outline">Sign in</Button>
+              </Link>
+            )}
             {/* <UserButton size="full" /> */}
           </div>
           <Link
