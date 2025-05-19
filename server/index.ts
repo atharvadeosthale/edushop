@@ -11,7 +11,6 @@ import { env } from "@/lib/env";
 import { z } from "zod";
 import { user } from "@/database/schema/auth-schema";
 import { purchasesTable } from "@/database/schema/purchase";
-import { caller } from "@/lib/trpc/server";
 
 export const appRouter = router({
   getUser: publicProcedure.query(async ({}) => {
@@ -84,7 +83,6 @@ export const appRouter = router({
     if (!stripeConnectionId[0]) {
       const stripeAccount = await stripe.accounts.create({
         type: "express",
-        // country: "IN",
         email: userSession.user.email,
         capabilities: {
           transfers: { requested: true },
@@ -188,8 +186,6 @@ export const appRouter = router({
             "You need to connect your Stripe account to create a workshop.",
         });
       }
-
-      // console.log(name, description, price, time);
 
       // Create stripe product
       const stripeProduct = await stripe.products.create(

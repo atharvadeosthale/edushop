@@ -11,6 +11,6 @@ export const db = drizzle({
     url: env.UPSTASH_REDIS_URL,
     token: env.UPSTASH_REDIS_TOKEN,
 
-    global: true,
+    global: false,
   }),
 });

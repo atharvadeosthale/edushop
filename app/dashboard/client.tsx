@@ -14,6 +14,7 @@ import { useTRPC } from "@/lib/trpc/client";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { Loader2, UserCircleIcon, UserRoundSearch } from "lucide-react";
 import { CopyButton } from "@/components/ui/copy-button";
+import { toast } from "sonner";
 
 export default function DashboardClient() {
   const trpc = useTRPC();
@@ -44,6 +45,9 @@ export default function DashboardClient() {
     trpc.getStripeLoginLink.mutationOptions({
       onSuccess: (data) => {
         window.location.href = data;
+      },
+      onError: (error) => {
+        toast.error(error.message);
       },
     })
   );
@@ -208,6 +212,7 @@ export default function DashboardClient() {
                         </TableHead>
                         <TableHead className="text-white/70">Price</TableHead>
                         <TableHead className="text-white/70">Date</TableHead>
+                        <TableHead className="text-white/70">Actions</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -229,6 +234,17 @@ export default function DashboardClient() {
                             {new Date(
                               workshop.time * 1000
                             ).toLocaleDateString()}
+                          </TableCell>
+                          <TableCell className="text-white/70">
+                            <CopyButton
+                              value={`${
+                                typeof window !== "undefined"
+                                  ? window.location.origin
+                                  : ""
+                              }/workshop/${workshop.id}`}
+                              label="Copy Link"
+                              successMessage="Link copied!"
+                            />
                           </TableCell>
                         </TableRow>
                       ))}

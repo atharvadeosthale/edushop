@@ -17,11 +17,18 @@ export default function Navbar() {
 
   queryOptions.retry = false;
 
-  const { data: user, isLoading: isUserLoading } = useQuery(queryOptions);
+  const {
+    data: user,
+    isError: isUserError,
+    isLoading: isUserLoading,
+    refetch: refetchUser,
+  } = useQuery(queryOptions);
 
   const handleSignOut = async () => {
     await authClient.signOut();
+    refetchUser();
     router.refresh();
+    router.push("/");
   };
 
   return (
@@ -64,17 +71,17 @@ export default function Navbar() {
         <div className="flex items-center gap-4">
           <div className="hidden sm:flex items-center">
             {isUserLoading ? (
-              <div className="w-10 h-10 rounded-full bg-gray-800 animate-pulse" />
-            ) : user ? (
+              <div className="w-8 h-8 rounded-full bg-gray-800 animate-pulse" />
+            ) : !isUserError && user ? (
               user.image ? (
                 <img
                   src={user.image}
                   alt="User"
-                  className="w-10 h-10 rounded-full"
+                  className="w-8 h-8 rounded-full"
                   onClick={handleSignOut}
                 />
               ) : (
-                <UserIcon className="w-10 h-10" onClick={handleSignOut} />
+                <UserIcon className="w-8 h-8" onClick={handleSignOut} />
               )
             ) : (
               <Link href="/auth">
