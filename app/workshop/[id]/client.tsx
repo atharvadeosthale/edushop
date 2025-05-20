@@ -15,6 +15,18 @@ import {
 import { useQuery } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
 import "@stream-io/video-react-sdk/dist/css/styles.css";
+import "stream-chat-react/dist/css/v2/index.css";
+import {
+  Channel,
+  ChannelHeader,
+  MessageInput,
+  Window,
+  Chat,
+  MessageList,
+  useCreateChatClient,
+  Thread,
+} from "stream-chat-react";
+import { Channel as ChannelType } from "stream-chat";
 
 export default function WorkshopClientPage({
   streamUserToken,
@@ -27,9 +39,20 @@ export default function WorkshopClientPage({
   const { data: user } = useQuery(trpc.getUser.queryOptions());
   const [client, setClient] = useState<StreamVideoClient | null>(null);
   const [call, setCall] = useState<Call | null>(null);
+  const [channel, setChannel] = useState<ChannelType | undefined>(undefined);
 
-  useEffect(() => {
-    if (!user) return;
+  const chatClient = useCreateChatClient({
+    apiKey: process.env.NEXT_PUBLIC_STREAM_API_KEY!,
+    tokenOrProvider: streamUserToken,
+    userData: {
+      id: user?.id || "",
+      name: user?.name,
+      image: user?.image ?? undefined,
+    },
+  });
+
+  const handleConnections = async () => {
+    if (!user || !chatClient) return;
 
     const videoClient = StreamVideoClient.getOrCreateInstance({
       apiKey: process.env.NEXT_PUBLIC_STREAM_API_KEY!,
@@ -47,22 +70,50 @@ export default function WorkshopClientPage({
     setClient(videoClient);
     setCall(callInstance);
 
+    await chatClient.connectUser({ id: user.id }, streamUserToken);
+
+    const channel = chatClient.channel("messaging", callId, {
+      members: [user.id],
+    });
+
+    setChannel(channel);
+  };
+
+  useEffect(() => {
+    handleConnections();
+
     return () => {
       // Clean up
-      callInstance.leave();
+      call?.leave();
     };
-  }, [user, streamUserToken, callId]);
+  }, [user, streamUserToken, callId, chatClient]);
 
-  if (!user || !client || !call) {
+  if (!user || !client || !call || !chatClient) {
     return <div>Loading...</div>;
   }
 
   return (
-    <StreamVideo client={client}>
-      <StreamCall call={call}>
-        <WorkshopUILayout />
-      </StreamCall>
-    </StreamVideo>
+    <div className="flex h-screen">
+      <div className="flex-1">
+        <StreamVideo client={client}>
+          <StreamCall call={call}>
+            <WorkshopUILayout />
+          </StreamCall>
+        </StreamVideo>
+      </div>
+      <div className="w-96 h-full">
+        <Chat client={chatClient}>
+          <Channel channel={channel}>
+            <Window>
+              <ChannelHeader />
+              <MessageList />
+              <MessageInput />
+            </Window>
+            <Thread />
+          </Channel>
+        </Chat>
+      </div>
+    </div>
   );
 }
 
