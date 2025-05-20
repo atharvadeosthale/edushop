@@ -38,8 +38,9 @@ export function CopyButton({
       variant="outline"
       size="sm"
       className={cn(
-        "text-white border-white/20 bg-white/5 hover:bg-white/10 hover:border-white/30",
-        copying && "text-green-400 border-green-500/30",
+        "text-black dark:text-white border-black/20 dark:border-white/20 bg-black/5 dark:bg-white/5 hover:bg-black/10 hover:dark:bg-white/10 hover:border-black/30 hover:dark:border-white/30",
+        copying &&
+          "text-green-600 dark:text-green-400 border-green-600/30 dark:border-green-500/30",
         className
       )}
     >

@@ -43,29 +43,25 @@ export default function Navbar() {
 
         <div className="hidden md:flex items-center gap-6">
           <Link
-            href="#"
+            href="/"
             className="text-muted-foreground hover:text-foreground transition-colors"
           >
-            Features
+            Home
           </Link>
           <Link
-            href="#"
+            href="https://youtube.com/c/AtharvaDeosthale"
             className="text-muted-foreground hover:text-foreground transition-colors"
           >
-            Pricing
+            YouTube
           </Link>
-          <Link
-            href="#"
-            className="text-muted-foreground hover:text-foreground transition-colors"
-          >
-            Testimonials
-          </Link>
-          <Link
-            href="#"
-            className="text-muted-foreground hover:text-foreground transition-colors"
-          >
-            Blog
-          </Link>
+          {user && (
+            <Link
+              href="/dashboard"
+              className="text-muted-foreground hover:text-foreground transition-colors"
+            >
+              Dashboard
+            </Link>
+          )}
         </div>
 
         <div className="flex items-center gap-4">

@@ -5,8 +5,8 @@ import {
   Link as LinkIcon,
   Video,
   CreditCard,
-  CheckCircle,
 } from "lucide-react";
+import Link from "next/link";
 
 export interface FeatureData {
   id: number;
@@ -105,24 +105,14 @@ export default function Home() {
               rest—payments, attendees, and delivery.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 mt-2">
-              <Button
-                size="lg"
-                className="w-full sm:w-fit px-8 py-6 text-lg font-medium"
-              >
-                Get started for free
-              </Button>
-              <Button
-                variant="outline"
-                size="lg"
-                className="w-full sm:w-fit px-8 py-6 text-lg font-medium"
-              >
-                Learn more
-              </Button>
-            </div>
-            <div className="flex items-center gap-2 mt-4 text-muted-foreground">
-              <span className="text-green-500">✓</span> No credit card required
-              <span className="mx-2">•</span>
-              <span className="text-green-500">✓</span> Free plan available
+              <Link href="/auth">
+                <Button
+                  size="lg"
+                  className="w-full sm:w-fit px-8 py-6 text-lg font-medium"
+                >
+                  Get started for free
+                </Button>
+              </Link>
             </div>
           </div>
           <div className="relative w-full max-w-lg h-[400px] rounded-2xl overflow-hidden shadow-2xl">

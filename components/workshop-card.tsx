@@ -36,13 +36,13 @@ export default function WorkshopCard({
 
   return (
     <div className="group relative">
-      <div className="absolute -inset-1 bg-gradient-to-r from-white/[0.07] to-white/[0.03] rounded-xl blur opacity-0 group-hover:opacity-100 transition duration-500 group-hover:duration-200"></div>
-      <div className="relative h-full p-6 bg-white/[0.02] border border-white/10 rounded-xl hover:border-white/20 transition-all duration-300">
+      <div className="absolute -inset-1 bg-gradient-to-r from-black/[0.07] to-black/[0.03] dark:from-white/[0.07] dark:to-white/[0.03] rounded-xl blur opacity-0 group-hover:opacity-100 transition duration-500 group-hover:duration-200"></div>
+      <div className="relative h-full p-6 bg-black/[0.02] dark:bg-white/[0.02] border border-black/10 dark:border-white/10 rounded-xl hover:border-black/20 hover:dark:border-white/20 transition-all duration-300">
         <div className="h-full flex flex-col">
           <h3 className="text-xl font-medium mb-2">{name}</h3>
-          <div className="mt-1 mb-4 h-px w-full bg-gradient-to-r from-white/10 to-transparent"></div>
+          <div className="mt-1 mb-4 h-px w-full bg-gradient-to-r from-black/10 dark:from-white/10 to-transparent"></div>
 
-          <div className="space-y-3 text-white/70 text-sm mb-6">
+          <div className="space-y-3 text-black/70 dark:text-white/70 text-sm mb-6">
             <div className="flex items-center gap-2">
               <svg
                 className="w-4 h-4 opacity-50"
@@ -60,7 +60,7 @@ export default function WorkshopCard({
               </svg>
               <p className="flex justify-between w-full">
                 <span>Date</span>
-                <span className="text-white font-medium">
+                <span className="text-black dark:text-white font-medium">
                   {new Date(time * 1000).toLocaleDateString(undefined, {
                     year: "numeric",
                     month: "short",
@@ -86,19 +86,19 @@ export default function WorkshopCard({
               </svg>
               <p className="flex justify-between w-full">
                 <span>Price</span>
-                <span className="text-white font-medium">
+                <span className="text-black dark:text-white font-medium">
                   ${(price / 100).toFixed(2)}
                 </span>
               </p>
             </div>
           </div>
 
-          <p className="text-white/80 mt-auto text-sm leading-relaxed">
+          <p className="text-black/80 dark:text-white/80 mt-auto text-sm leading-relaxed">
             {description}
           </p>
 
           <button
-            className="mt-6 py-2 px-4 bg-white/5 hover:bg-white/10 border border-white/10 rounded-lg text-sm font-medium transition-all duration-200 hover:border-white/20 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="mt-6 py-2 px-4 bg-black/5 dark:bg-white/5 hover:bg-black/10 hover:dark:bg-white/10 border border-black/10 dark:border-white/10 rounded-lg text-sm font-medium transition-all duration-200 hover:border-black/20 hover:dark:border-white/20 disabled:opacity-50 disabled:cursor-not-allowed"
             onClick={() => purchaseWorkshop({ id })}
             disabled={isPurchasing}
           >
