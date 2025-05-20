@@ -1,7 +1,6 @@
 import { db } from "@/database/connection";
 import { purchasesTable } from "@/database/schema/purchase";
 import { stripeConnectionsTable } from "@/database/schema/stripe-connection";
-import { workshopsTable } from "@/database/schema/workshop";
 import { env } from "@/lib/env";
 import { stripe } from "@/lib/stripe";
 import { eq } from "drizzle-orm";

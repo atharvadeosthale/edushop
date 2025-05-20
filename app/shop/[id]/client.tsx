@@ -55,7 +55,8 @@ export function ShopClientPage({ id }: { id: string }) {
             Shop Not Found
           </div>
           <p className="text-black/60 dark:text-white/60 font-light">
-            The shop you're looking for doesn't exist or may have been removed.
+            The shop you&apos;re looking for doesn&apos;t exist or may have been
+            removed.
           </p>
         </div>
       </div>

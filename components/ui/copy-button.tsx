@@ -27,7 +27,7 @@ export function CopyButton({
       setCopying(true);
       toast.success(successMessage);
       setTimeout(() => setCopying(false), 1500);
-    } catch (err) {
+    } catch {
       toast.error("Failed to copy");
     }
   };

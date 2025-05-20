@@ -1,11 +1,5 @@
 import React from "react";
-import {
-  CheckCircle,
-  CalendarClock,
-  Link as LinkIcon,
-  Video,
-  CreditCard,
-} from "lucide-react";
+import { CheckCircle } from "lucide-react";
 
 // Keep the interface definition here as it defines the shape of the expected prop
 interface FeatureData {

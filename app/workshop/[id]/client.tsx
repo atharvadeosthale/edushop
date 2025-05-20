@@ -10,7 +10,7 @@ import {
   StreamVideoClient,
   CallingState,
   useCallStateHooks,
-  useCall,
+  Call,
 } from "@stream-io/video-react-sdk";
 import { useQuery } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
@@ -26,7 +26,7 @@ export default function WorkshopClientPage({
   const trpc = useTRPC();
   const { data: user } = useQuery(trpc.getUser.queryOptions());
   const [client, setClient] = useState<StreamVideoClient | null>(null);
-  const [call, setCall] = useState<any>(null);
+  const [call, setCall] = useState<Call | null>(null);
 
   useEffect(() => {
     if (!user) return;
@@ -67,10 +67,8 @@ export default function WorkshopClientPage({
 }
 
 const WorkshopUILayout = () => {
-  const call = useCall();
-  const { useCallCallingState, useParticipantCount } = useCallStateHooks();
+  const { useCallCallingState } = useCallStateHooks();
   const callingState = useCallCallingState();
-  const participantCount = useParticipantCount();
 
   if (callingState !== CallingState.JOINED) {
     return (
