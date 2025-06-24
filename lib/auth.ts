@@ -14,6 +14,10 @@ import { createAuthMiddleware, openAPI } from "better-auth/plugins";
 import { stripe } from "@better-auth/stripe";
 import { stripe as stripeClient } from "@/lib/stripe";
 import { env } from "./env";
+import Stripe from "stripe";
+import { purchasesTable } from "@/database/schema/purchase";
+import { eq } from "drizzle-orm";
+import { stripeConnectionsTable } from "@/database/schema/stripe-connection";
 
 export const auth = betterAuth({
   appName: "edushop",
@@ -32,15 +36,55 @@ export const auth = betterAuth({
     stripe({
       stripeClient,
       createCustomerOnSignUp: true,
-      stripeWebhookSecret: env.STRIPE_WEBHOOK_SECRET,
+      stripeWebhookSecret: env.STRIPE_CONNECT_WEBHOOK_SECRET,
       onEvent: async (event) => {
         console.log("[onEvent]", event.type);
-        if (event.type === "account.application.authorized") {
-          console.log(
-            "[account.application.authorized] account",
-            event.account
+
+        if (event.type === "checkout.session.completed") {
+          const session = event.data.object as Stripe.Checkout.Session;
+
+          console.log("Checkout session completed:", session);
+
+          const checkoutSession = await stripeClient.checkout.sessions.retrieve(
+            session.id,
+            { stripeAccount: event.account }
           );
-          console.log("[account.application.authorized]", event.data.object);
+
+          console.log("Checkout session:", checkoutSession);
+
+          if (checkoutSession.status === "complete") {
+            // Purchase successful, update the DB
+            await db
+              .update(purchasesTable)
+              .set({
+                purchaseSuccessful: true,
+              })
+              .where(eq(purchasesTable.stripeCheckoutId, checkoutSession.id));
+          }
+        }
+
+        if (event.type === "capability.updated") {
+          const accountId = event.data.object.account.toString();
+          const account = await stripeClient.accounts.retrieve(accountId);
+
+          if (
+            account.capabilities?.transfers === "active" &&
+            account.capabilities?.card_payments === "active"
+          ) {
+            await db
+              .update(stripeConnectionsTable)
+              .set({
+                onboardingCompleted: true,
+              })
+              .where(eq(stripeConnectionsTable.stripeAccountId, accountId));
+          } else {
+            await db
+              .update(stripeConnectionsTable)
+              .set({
+                onboardingCompleted: false,
+              })
+              .where(eq(stripeConnectionsTable.stripeAccountId, accountId));
+          }
         }
       },
     }),
