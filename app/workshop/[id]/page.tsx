@@ -3,9 +3,10 @@ import { caller, getQueryClient, trpc } from "@/lib/trpc/server";
 import { dehydrate, HydrationBoundary } from "@tanstack/react-query";
 import { headers } from "next/headers";
 import { notFound, unauthorized } from "next/navigation";
-import { StreamClient } from "@stream-io/node-sdk";
+import { StreamChatClient, StreamClient } from "@stream-io/node-sdk";
 import WorkshopClientPage from "./client";
 import { env } from "@/lib/env";
+import { StreamChat } from "stream-chat";
 
 export default async function Page({
   params,
@@ -58,13 +59,31 @@ export default async function Page({
     env.STREAM_SECRET_KEY
   );
 
+  const streamChatClient = StreamChat.getInstance(
+    env.NEXT_PUBLIC_STREAM_API_KEY,
+    env.STREAM_SECRET_KEY
+  );
+
+  const chatChannel = await streamChatClient.channel("messaging", id, {
+    members: [workshop.createdBy],
+    created_by_id: workshop.createdBy,
+  });
+
+  await chatChannel.addMembers([user.user.id]);
+
+  const streamChatUserToken = streamChatClient.createToken(user.user.id);
+
   const streamUserToken = streamClient.generateUserToken({
     user_id: user.user.id,
   });
 
   return (
     <HydrationBoundary state={dehydrate(queryClient)}>
-      <WorkshopClientPage streamUserToken={streamUserToken} callId={id} />
+      <WorkshopClientPage
+        streamUserToken={streamUserToken}
+        callId={id}
+        streamChatUserToken={streamChatUserToken}
+      />
     </HydrationBoundary>
   );
 }

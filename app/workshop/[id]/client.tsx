@@ -31,9 +31,11 @@ import { Channel as ChannelType } from "stream-chat";
 export default function WorkshopClientPage({
   streamUserToken,
   callId,
+  streamChatUserToken,
 }: {
   streamUserToken: string;
   callId: string;
+  streamChatUserToken: string;
 }) {
   const trpc = useTRPC();
   const { data: user } = useQuery(trpc.getUser.queryOptions());
@@ -43,7 +45,7 @@ export default function WorkshopClientPage({
 
   const chatClient = useCreateChatClient({
     apiKey: process.env.NEXT_PUBLIC_STREAM_API_KEY!,
-    tokenOrProvider: streamUserToken,
+    tokenOrProvider: streamChatUserToken,
     userData: {
       id: user?.id || "",
       name: user?.name,
@@ -64,13 +66,16 @@ export default function WorkshopClientPage({
       },
     });
 
-    const callInstance = videoClient.call("livestream", callId);
+    const callInstance = videoClient.call("default", callId);
     callInstance.join({ create: true });
 
     setClient(videoClient);
     setCall(callInstance);
 
-    await chatClient.connectUser({ id: user.id }, streamUserToken);
+    await chatClient.connectUser(
+      { id: user.id, name: user.name, image: user.image ?? undefined },
+      streamChatUserToken
+    );
 
     const channel = chatClient.channel("messaging", callId, {
       members: [user.id],
