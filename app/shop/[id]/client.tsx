@@ -3,9 +3,26 @@
 import { useTRPC } from "@/lib/trpc/client";
 import { useQuery } from "@tanstack/react-query";
 import WorkshopCard from "@/components/workshop-card";
+import SuccessDialog from "@/components/shop/success-dialog";
+import { useState, useEffect } from "react";
 
-export function ShopClientPage({ id }: { id: string }) {
+export function ShopClientPage({
+  id,
+  showSuccess,
+  purchaseWorkshopId,
+}: {
+  id: string;
+  showSuccess?: string;
+  purchaseWorkshopId?: string;
+}) {
   const trpc = useTRPC();
+  const [isSuccessDialogOpen, setIsSuccessDialogOpen] = useState(false);
+
+  useEffect(() => {
+    if (showSuccess === "true" && purchaseWorkshopId) {
+      setIsSuccessDialogOpen(true);
+    }
+  }, [showSuccess, purchaseWorkshopId]);
 
   const { data: shopDetails, isLoading: isShopDetailsLoading } = useQuery(
     trpc.getShopDetails.queryOptions({ id })
@@ -181,6 +198,15 @@ export function ShopClientPage({ id }: { id: string }) {
           </section>
         </div>
       </div>
+
+      {/* Success Dialog */}
+      {purchaseWorkshopId && (
+        <SuccessDialog
+          isOpen={isSuccessDialogOpen}
+          onClose={() => setIsSuccessDialogOpen(false)}
+          purchaseWorkshopId={purchaseWorkshopId}
+        />
+      )}
     </div>
   );
 }

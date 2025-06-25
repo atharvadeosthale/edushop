@@ -50,5 +50,13 @@ export default async function SuccessPage({
     })
     .where(eq(purchasesTable.stripeCheckoutId, checkoutSessionId));
 
-  return redirect(`${env.NEXT_PUBLIC_BASE_URL}/shop/${id}?showSuccess=true`);
+  // Get the purchase
+  const purchase = await db
+    .select()
+    .from(purchasesTable)
+    .where(eq(purchasesTable.stripeCheckoutId, checkoutSessionId));
+
+  return redirect(
+    `${env.NEXT_PUBLIC_BASE_URL}/shop/${id}?showSuccess=true&workshopId=${purchase[0].workshopId}`
+  );
 }

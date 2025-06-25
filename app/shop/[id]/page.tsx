@@ -5,10 +5,13 @@ import { HydrationBoundary } from "@tanstack/react-query";
 
 export default async function Page({
   params,
+  searchParams,
 }: {
   params: Promise<{ id: string }>;
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
 }) {
   const { id } = await params;
+  const { showSuccess, workshopId } = await searchParams;
 
   const queryClient = getQueryClient();
 
@@ -16,7 +19,11 @@ export default async function Page({
 
   return (
     <HydrationBoundary state={dehydrate(queryClient)}>
-      <ShopClientPage id={id} />
+      <ShopClientPage
+        id={id}
+        showSuccess={showSuccess as string}
+        purchaseWorkshopId={workshopId as string}
+      />
     </HydrationBoundary>
   );
 }
