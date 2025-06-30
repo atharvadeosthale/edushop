@@ -85,6 +85,7 @@ export default function WorkshopClientPage({
   };
 
   useEffect(() => {
+    if (channel) return;
     handleConnections();
 
     return () => {

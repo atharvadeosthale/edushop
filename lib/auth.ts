@@ -18,6 +18,7 @@ import Stripe from "stripe";
 import { purchasesTable } from "@/database/schema/purchase";
 import { eq } from "drizzle-orm";
 import { stripeConnectionsTable } from "@/database/schema/stripe-connection";
+import { StreamChat } from "stream-chat";
 
 export const auth = betterAuth({
   appName: "edushop",
@@ -53,7 +54,42 @@ export const auth = betterAuth({
           console.log("Checkout session:", checkoutSession);
 
           if (checkoutSession.status === "complete") {
-            // Purchase successful, update the DB
+            // Purchase successful
+            const streamClient = new StreamClient(
+              env.NEXT_PUBLIC_STREAM_API_KEY,
+              env.STREAM_SECRET_KEY
+            );
+
+            const streamChatClient = StreamChat.getInstance(
+              env.NEXT_PUBLIC_STREAM_API_KEY,
+              env.STREAM_SECRET_KEY
+            );
+
+            // Get the workshop
+            const purchaseFromDb = await db
+              .select()
+              .from(purchasesTable)
+              .where(eq(purchasesTable.stripeCheckoutId, checkoutSession.id))
+              .limit(1);
+
+            // Add the user to the Stream channels
+
+            const call = await streamClient.video.call(
+              "default",
+              purchaseFromDb[0].workshopId.toString()
+            );
+
+            await call.updateCallMembers({
+              update_members: [{ user_id: purchaseFromDb[0].userId }],
+            });
+
+            const channel = streamChatClient.channel(
+              "messaging",
+              purchaseFromDb[0].workshopId.toString()
+            );
+            await channel.addMembers([purchaseFromDb[0].userId]);
+
+            // Update the DB
             await db
               .update(purchasesTable)
               .set({

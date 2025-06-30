@@ -11,6 +11,8 @@ import { env } from "@/lib/env";
 import { z } from "zod";
 import { user } from "@/database/schema/auth-schema";
 import { purchasesTable } from "@/database/schema/purchase";
+import { StreamClient } from "@stream-io/node-sdk";
+import { StreamChat } from "stream-chat";
 
 export const appRouter = router({
   getUser: publicProcedure.query(async ({}) => {
@@ -148,8 +150,6 @@ export const appRouter = router({
         name: z.string().min(1, "Name is required"),
         description: z.string().min(1, "Description is required"),
         price: z.number().min(1, "Price is required"),
-        // TODO: this feels a flaky way, check later if this causes
-        // some stupid funny issues like before
         time: z.number().min(Math.floor(Date.now() / 1000), "Time is required"),
       })
     )
@@ -214,14 +214,54 @@ export const appRouter = router({
         }
       );
 
-      await db.insert(workshopsTable).values({
-        name: name,
-        description: description,
-        price: updatedPrice,
-        time: time,
-        createdBy: userSession.user.id,
-        stripeProductId: stripeProduct.id,
+      const workshop = await db
+        .insert(workshopsTable)
+        .values({
+          name: name,
+          description: description,
+          price: updatedPrice,
+          time: time,
+          createdBy: userSession.user.id,
+          stripeProductId: stripeProduct.id,
+        })
+        .returning();
+
+      // TODO: Create stream channels
+      const streamClient = new StreamClient(
+        env.NEXT_PUBLIC_STREAM_API_KEY,
+        env.STREAM_SECRET_KEY
+      );
+
+      const streamChatClient = StreamChat.getInstance(
+        env.NEXT_PUBLIC_STREAM_API_KEY,
+        env.STREAM_SECRET_KEY
+      );
+
+      // Create stream call
+
+      const call = await streamClient.video.call(
+        "default",
+        workshop[0].id.toString()
+      );
+
+      await call.create({
+        data: {
+          members: [{ user_id: workshop[0].createdBy, role: "admin" }],
+          created_by: { id: workshop[0].createdBy, role: "admin" },
+        },
       });
+
+      // Create stream chat
+
+      const channel = streamChatClient.channel(
+        "messaging",
+        workshop[0].id.toString(),
+        {
+          members: [workshop[0].createdBy],
+          created_by: { id: workshop[0].createdBy, role: "admin" },
+        }
+      );
+      await channel.create();
 
       return {
         success: true,
